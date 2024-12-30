@@ -1,16 +1,30 @@
 package User;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.*;
+import java.util.Properties;
 import java.util.Scanner;
 
 public class Login {
-    Scanner sc=new Scanner(System.in);
+    private static final Properties properties = new Properties();
+
+    static {
+        try{
+            properties.load(new FileInputStream(".env"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getEnv(String key) {
+        return properties.getProperty(key);
+    }
+
     public void login() throws ClassNotFoundException, SQLException {
-        String url="jdbc:mysql://localhost:3306/javadb";
-        System.out.println("Enter the name of the user");
-        String name=sc.nextLine();
-        String user="user";
-        System.out.println("Enter the password of the user");
-        String password=sc.nextLine();
+        String url="jdbc:mysql://localhost:3306/";
+        String user=getEnv("DB_USERNAME");
+        String password=getEnv("DB_PASSWORD");
+        String dabaseName=getEnv("DB_NAME");
         //加载库
         Class.forName("com.mysql.cj.jdbc.Driver");
         //获取连接对象
