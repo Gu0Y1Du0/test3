@@ -21,11 +21,13 @@ public class AdminMerchantPanel extends JPanel {
         JLabel myTitle = new JLabel("商家信息", SwingConstants.CENTER);
         myTitle.setFont(new Font("宋体", Font.BOLD, 24));
         myTitle.setForeground(new Color(51, 51, 51));
+
         add(myTitle, BorderLayout.NORTH);
         initializeComponents();
     }
 
     private void initializeComponents() throws SQLException {
+
         // 商家表格的列名
         String[] columnNames = {"商家ID", "商家名称", "联系邮箱", "联系电话", "地址", "评分", "注册日期"};
 

@@ -77,12 +77,14 @@ public class AdminMenuPanel extends JPanel {
             throw new RuntimeException(e);
         }
 
+
         // 将商家管理面板添加到卡片布局
         cardPanel.add(adminMerchantPanel, "merchants");
         // 将 cardPanel 添加到中心
         add(cardPanel, BorderLayout.CENTER);
         // 将按钮面板添加到底部
         add(buttonPanel, BorderLayout.SOUTH);
+
 
         // 创建商品管理面板
         AdminCommdityPanel adminCommdityPanel = null;
@@ -107,6 +109,7 @@ public class AdminMenuPanel extends JPanel {
         }
         cardPanel.add(adminUserPanel, "user");
         add(cardPanel, BorderLayout.SOUTH );
+
     }
 
     public static void main(String[] args) {
