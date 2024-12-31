@@ -1,4 +1,5 @@
 package User;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -12,7 +13,7 @@ public class RegisterWindow extends JFrame {
         setTitle("用户注册");
 
         // 设置窗口大小
-        setSize(400, 350);
+        setSize(400, 400);
 
         // 设置窗口关闭操作
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,14 +52,34 @@ public class RegisterWindow extends JFrame {
         confirmPasswordField.setBounds(150, 150, 150, 30);
         panel.add(confirmPasswordField);
 
+        // 创建邮箱标签
+        JLabel emailLabel = new JLabel("邮箱:");
+        emailLabel.setBounds(50, 200, 80, 30);
+        panel.add(emailLabel);
+
+        // 创建邮箱输入框
+        JTextField emailText = new JTextField();
+        emailText.setBounds(150, 200, 150, 30);
+        panel.add(emailText);
+
+        // 创建手机号码标签
+        JLabel phoneLabel = new JLabel("手机号码:");
+        phoneLabel.setBounds(50, 250, 80, 30);
+        panel.add(phoneLabel);
+
+        // 创建手机号码输入框
+        JTextField phoneText = new JTextField();
+        phoneText.setBounds(150, 250, 150, 30);
+        panel.add(phoneText);
+
         // 创建注册按钮
         JButton registerButton = new JButton("注册");
-        registerButton.setBounds(50, 220, 100, 30);
+        registerButton.setBounds(50, 300, 100, 30);
         panel.add(registerButton);
 
         // 创建返回按钮
         JButton backButton = new JButton("返回");
-        backButton.setBounds(200, 220, 100, 30);
+        backButton.setBounds(200, 300, 100, 30);
         panel.add(backButton);
 
         // 给注册按钮添加事件监听
@@ -68,9 +89,11 @@ public class RegisterWindow extends JFrame {
                 String username = userText.getText();
                 String password = new String(passwordField.getPassword());
                 String confirmPassword = new String(confirmPasswordField.getPassword());
+                String email = emailText.getText();
+                String phoneNumber = phoneText.getText();
 
                 // 验证输入是否为空
-                if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || email.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "所有字段都是必填的！");
                     return;
                 }
@@ -81,11 +104,20 @@ public class RegisterWindow extends JFrame {
                     return;
                 }
 
-                // 假设这里是成功注册（实际应该保存到数据库）
-                JOptionPane.showMessageDialog(null, "注册成功！");
+                try {
+                    DatabaseConnection dbConnection = new DatabaseConnection();
+                    boolean isRegistered = dbConnection.registerUser(username, password, email, phoneNumber);
 
-                // 注册成功后，可以跳转回登录界面（这里直接关闭当前窗口）
-                dispose(); // 关闭注册窗口
+                    if (isRegistered) {
+                        JOptionPane.showMessageDialog(null, "注册成功！");
+                        dispose(); // 关闭注册窗口
+                        new LoginWindow().setVisible(true); // 返回登录窗口
+                    } else {
+                        JOptionPane.showMessageDialog(null, "注册失败，请重试！");
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "注册失败: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 

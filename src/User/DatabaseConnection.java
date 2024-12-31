@@ -1,13 +1,15 @@
 package User;
 
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.math.BigDecimal;
+import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 
@@ -30,6 +32,9 @@ public class DatabaseConnection {
     private static final String USER = getEnv("DB_USERNAME");
     private static final String PASSWORD = getEnv("DB_PASSWORD");
     private static final String databaseName= getEnv("DB_NAME");
+    private static final String ALGORITHM = "AES";
+    private static final byte[] keyValue =
+        new byte[] { 'T', 'h', 'i', 's', 'I', 's', 'A', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' };
 
     public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL + databaseName, USER, PASSWORD);
@@ -93,6 +98,183 @@ public class DatabaseConnection {
             }
         }
         return categories;
+    }
+
+    public User getUserByUsername(String username) throws SQLException {
+        String query = "SELECT * FROM users WHERE Username = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                return new User(
+                        resultSet.getInt("UserID"),
+                        resultSet.getString("Username"),
+                        resultSet.getString("Role"),
+                        resultSet.getString("PasswordHash"),
+                        resultSet.getString("Email"),
+                        resultSet.getString("PhoneNumber"),
+                        resultSet.getString("RegistrationDate")
+                );
+            }
+        }
+        return null;
+    }
+
+    public boolean registerUser(String username, String password, String email, String phoneNumber) throws Exception {
+        String hashedPassword = encrypt(password);
+
+        String query = "INSERT INTO users (Username, PasswordHash, Email, PhoneNumber) VALUES (?, ?, ?, ?)";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2, hashedPassword);
+            preparedStatement.setString(3, email);
+            preparedStatement.setString(4, phoneNumber);
+            int rowsAffected = preparedStatement.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
+
+    String encrypt(String valueToEnc) throws Exception {
+        SecretKey key = generateKey();
+        Cipher c = Cipher.getInstance(ALGORITHM);
+        c.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encValue = c.doFinal(valueToEnc.getBytes());
+        return Base64.getEncoder().encodeToString(encValue);
+    }
+
+    private SecretKey generateKey() throws Exception {
+        return new SecretKeySpec(keyValue, ALGORITHM);
+    }
+
+    public ArrayList<ProductWithQuantity> getCartItemsByUserID(int userID) throws SQLException {
+        ArrayList<ProductWithQuantity> cartItems = new ArrayList<>();
+
+        String query = "SELECT ci.ProductID, p.ProductName, p.Description, p.Price, p.Stock, p.CategoryID, p.CreatedAt, p.MerchantID, ci.Quantity "
+                     + "FROM cartitems ci "
+                     + "JOIN products p ON ci.ProductID = p.ProductID "
+                     + "JOIN shoppingcart sc ON ci.CartID = sc.CartID "
+                     + "WHERE sc.UserID = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, userID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                int productID = resultSet.getInt("ProductID");
+                String productName = resultSet.getString("ProductName");
+                String description = resultSet.getString("Description");
+                BigDecimal price = resultSet.getBigDecimal("Price");
+                int stock = resultSet.getInt("Stock");
+                int categoryID = resultSet.getInt("CategoryID");
+                Date createdAt = resultSet.getDate("CreatedAt");
+                int merchantID = resultSet.getInt("MerchantID");
+                int quantity = resultSet.getInt("Quantity");
+
+                Product product = new Product(productID, productName, description, price, stock, categoryID, createdAt, merchantID);
+                cartItems.add(new ProductWithQuantity(product, quantity));
+            }
+        }
+        return cartItems;
+    }
+
+    private String hashPassword(String password) {
+        // 简单的哈希示例，实际应用中应使用更强的加密算法
+        return Integer.toHexString(password.hashCode());
+    }
+
+    public void addToCart(int userId, int productId, int quantity) throws SQLException {
+        try (Connection connection = getConnection()) {
+            // 获取或创建用户的购物车
+            String getCartQuery = "SELECT CartID FROM shoppingcart WHERE UserID = ?";
+            try (PreparedStatement getCartStatement = connection.prepareStatement(getCartQuery)) {
+                getCartStatement.setInt(1, userId);
+                ResultSet cartResultSet = getCartStatement.executeQuery();
+                int cartId;
+                if (!cartResultSet.next()) {
+                    // 如果用户没有购物车，则创建一个新的购物车
+                    String createCartQuery = "INSERT INTO shoppingcart (UserID) VALUES (?)";
+                    try (PreparedStatement createCartStatement = connection.prepareStatement(createCartQuery, Statement.RETURN_GENERATED_KEYS)) {
+                        createCartStatement.setInt(1, userId);
+                        createCartStatement.executeUpdate();
+                        ResultSet generatedKeys = createCartStatement.getGeneratedKeys();
+                        if (generatedKeys.next()) {
+                            cartId = generatedKeys.getInt(1);
+                        } else {
+                            throw new SQLException("Creating cart failed, no ID obtained.");
+                        }
+                    }
+                } else {
+                    cartId = cartResultSet.getInt("CartID");
+                }
+
+                // 检查购物车中是否已有该商品
+                String checkQuery = "SELECT Quantity FROM cartitems WHERE CartID = ? AND ProductID = ?";
+                try (PreparedStatement checkStatement = connection.prepareStatement(checkQuery)) {
+                    checkStatement.setInt(1, cartId);
+                    checkStatement.setInt(2, productId);
+                    ResultSet resultSet = checkStatement.executeQuery();
+                    if (resultSet.next()) {
+                        int existingQuantity = resultSet.getInt("Quantity");
+                        String updateQuery = "UPDATE cartitems SET Quantity = ? WHERE CartID = ? AND ProductID = ?";
+                        try (PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+                            updateStatement.setInt(1, existingQuantity + quantity);
+                            updateStatement.setInt(2, cartId);
+                            updateStatement.setInt(3, productId);
+                            updateStatement.executeUpdate();
+                        }
+                    } else {
+                        String insertQuery = "INSERT INTO cartitems (CartID, ProductID, Quantity) VALUES (?, ?, ?)";
+                        try (PreparedStatement insertStatement = connection.prepareStatement(insertQuery)) {
+                            insertStatement.setInt(1, cartId);
+                            insertStatement.setInt(2, productId);
+                            insertStatement.setInt(3, quantity);
+                            insertStatement.executeUpdate();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void clearCart(int userId) throws SQLException {
+        String deleteCartItemsQuery = "DELETE ci FROM cartitems ci JOIN shoppingcart sc ON ci.CartID = sc.CartID WHERE sc.UserID = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement deleteStatement = connection.prepareStatement(deleteCartItemsQuery)) {
+            deleteStatement.setInt(1, userId);
+            deleteStatement.executeUpdate();
+        }
+    }
+
+    public int createOrder(int userId, double totalAmount) throws SQLException {
+        String insertOrderQuery = "INSERT INTO orders (UserID, TotalAmount, OrderDate, Status) VALUES (?, ?, NOW(), 'Pending')";
+        try (Connection connection = getConnection();
+             PreparedStatement insertOrderStatement = connection.prepareStatement(insertOrderQuery, Statement.RETURN_GENERATED_KEYS)) {
+            insertOrderStatement.setInt(1, userId);
+            insertOrderStatement.setDouble(2, totalAmount);
+            insertOrderStatement.executeUpdate();
+
+            ResultSet generatedKeys = insertOrderStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Creating order failed, no ID obtained.");
+            }
+        }
+    }
+
+    public void addOrderItem(int orderId, int productId, int quantity, double price) throws SQLException {
+        String insertOrderItemQuery = "INSERT INTO orderitems (OrderID, ProductID, Quantity, Price) VALUES (?, ?, ?, ?)";
+        try (Connection connection = getConnection();
+             PreparedStatement insertOrderItemStatement = connection.prepareStatement(insertOrderItemQuery)) {
+            insertOrderItemStatement.setInt(1, orderId);
+            insertOrderItemStatement.setInt(2, productId);
+            insertOrderItemStatement.setInt(3, quantity);
+            insertOrderItemStatement.setDouble(4, price);
+            insertOrderItemStatement.executeUpdate();
+        }
     }
 
     public MyInformation getMyInformation() throws SQLException {

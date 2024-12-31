@@ -17,9 +17,17 @@ public class ProductPanel extends JPanel {
     private int currentPage = 0;
     private final int itemsPerPage = 6;
     private List<Product> productList = new ArrayList<>();
+    private User user;
+    private CardLayout cardLayout;
+    private JPanel contentPanel;
+    private CartPanel cartPanel;
 
-    public ProductPanel(JLabel cartLabel) {
+    public ProductPanel(JLabel cartLabel, User user, CardLayout cardLayout, JPanel contentPanel, CartPanel cartPanel) {
         this.cartLabel = cartLabel;
+        this.user = user;
+        this.cardLayout = cardLayout;
+        this.contentPanel = contentPanel;
+        this.cartPanel = cartPanel;
         setLayout(new BorderLayout());
 
         // 搜索栏和类别选择
@@ -53,7 +61,9 @@ public class ProductPanel extends JPanel {
         prevButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (currentPage > 0) {
+                if (currentPage == 0) {
+                    JOptionPane.showMessageDialog(ProductPanel.this, "您已经在第一页！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                } else {
                     currentPage--;
                     updateProductsDisplay();
                 }
@@ -65,7 +75,9 @@ public class ProductPanel extends JPanel {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if ((currentPage + 1) * itemsPerPage < productList.size()) {
+                if ((currentPage + 1) * itemsPerPage >= productList.size()) {
+                    JOptionPane.showMessageDialog(ProductPanel.this, "您已经在最后一页！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                } else {
                     currentPage++;
                     updateProductsDisplay();
                 }
@@ -132,7 +144,9 @@ public class ProductPanel extends JPanel {
         prevButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (currentPage > 0) {
+                if (currentPage == 0) {
+                    JOptionPane.showMessageDialog(ProductPanel.this, "您已经在第一页！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                } else {
                     currentPage--;
                     updateProductsDisplay();
                 }
@@ -144,7 +158,9 @@ public class ProductPanel extends JPanel {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if ((currentPage + 1) * itemsPerPage < productList.size()) {
+                if ((currentPage + 1) * itemsPerPage >= productList.size()) {
+                    JOptionPane.showMessageDialog(ProductPanel.this, "您已经在最后一页！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                } else {
                     currentPage++;
                     updateProductsDisplay();
                 }
@@ -175,8 +191,13 @@ public class ProductPanel extends JPanel {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                addToCart(product.getProductId(), 1);
                 updateCartCount(1);
                 JOptionPane.showMessageDialog(ProductPanel.this, product.getProductName() + " 已添加到购物车！", "成功", JOptionPane.INFORMATION_MESSAGE);
+                // 重新加载购物车数据
+                if (cartPanel != null) {
+                    cartPanel.loadCartItems(user.getUserId());
+                }
             }
         });
         panel.add(addButton);
@@ -186,8 +207,32 @@ public class ProductPanel extends JPanel {
 
     private void updateCartCount(int increment) {
         String currentText = cartLabel.getText();
-        int itemCount = Integer.parseInt(currentText.split(": ")[1].split("项")[0]);
+        int itemCount = extractItemCount(currentText);
         itemCount += increment;
         cartLabel.setText("购物车: " + itemCount + "项");
+    }
+
+    private int extractItemCount(String text) {
+        try {
+            // 提取纯数字部分
+            String numberPart = text.replaceAll("[^0-9]", "");
+            if (numberPart.isEmpty()) {
+                return 0; // 如果没有找到数字，则返回默认值 0
+            }
+            return Integer.parseInt(numberPart);
+        } catch (NumberFormatException e) {
+            System.err.println("Failed to parse integer from string: " + text);
+            return 0; // 返回默认值 0
+        }
+    }
+
+    private void addToCart(int productId, int quantity) {
+        try {
+            DatabaseConnection dbConnection = new DatabaseConnection();
+            dbConnection.addToCart(user.getUserId(), productId, quantity);
+            JOptionPane.showMessageDialog(null, "商品已成功添加到购物车！", "成功", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "无法添加商品到购物车: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
