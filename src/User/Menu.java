@@ -38,7 +38,7 @@ public class Menu extends JFrame {
         contentPanel.add(cartPanel, "Cart");
 
         // 我的面板
-        MyPanel myPanel = new MyPanel();
+        MyPanel myPanel = new MyPanel(user);
         contentPanel.add(myPanel, "My");
 
         // 底部工具栏
