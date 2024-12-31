@@ -83,16 +83,13 @@ public class UserAddress {
     }
     @Override
     public String toString() {
-        return "UserAddress{" +
-                "addressID=" + addressID +
-                ", addressLine1='" + addressLine1 + '\'' +
-                ", addressLine2='" + addressLine2 + '\'' +
-                ", city='" + city + '\'' +
-                ", state='" + state + '\'' +
-                ", postalCode='" + postalCode + '\'' +
-                ", country='" + country + '\'' +
-                ", isDefault=" + isDefault +
-                '}';
+        return  addressLine1 + '\'' +
+                 addressLine2 + '\'' +
+                 city + '\'' +
+                 state + '\'' +
+                 postalCode + '\'' +
+                 country + '\'' +
+                 isDefault;
     }
 }
 
