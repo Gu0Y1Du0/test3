@@ -87,41 +87,45 @@ public class CartPanel extends JPanel {
     }
 
     private void processPayment() {
-        try {
-            DatabaseConnection dbConnection = new DatabaseConnection();
-            ArrayList<ProductWithQuantity> cartItems = dbConnection.getCartItemsByUserID(user.getUserId());
+    try {
+        DatabaseConnection dbConnection = new DatabaseConnection();
+        ArrayList<ProductWithQuantity> cartItems = dbConnection.getCartItemsByUserID(user.getUserId());
 
-            if (cartItems.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "购物车为空，无法支付！", "提示", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-
-            // 计算总金额
-            BigDecimal totalAmount = BigDecimal.ZERO;
-            for (ProductWithQuantity item : cartItems) {
-                BigDecimal itemTotal = item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-                totalAmount = totalAmount.add(itemTotal);
-            }
-
-            int orderId = dbConnection.createOrder(user.getUserId(), totalAmount.doubleValue());
-
-            // 将购物车中的商品添加到订单项中
-            for (ProductWithQuantity item : cartItems) {
-                dbConnection.addOrderItem(orderId, item.getProduct().getProductId(), item.getQuantity(), item.getProduct().getPrice().doubleValue());
-            }
-
-            // 清空购物车
-            dbConnection.clearCart(user.getUserId());
-
-            // 刷新购物车显示
-            loadCartItems(user.getUserId());
-
-            JOptionPane.showMessageDialog(this, "订单已成功创建！订单号: " + orderId, "成功", JOptionPane.INFORMATION_MESSAGE);
-        } catch (SQLException e) {
-            System.out.println("Debug: Error processing payment: " + e.getMessage());
-            JOptionPane.showMessageDialog(this, "无法处理付款: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        if (cartItems.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "购物车为空，无法支付！", "提示", JOptionPane.INFORMATION_MESSAGE);
+            return;
         }
+
+        // 计算总金额
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (ProductWithQuantity item : cartItems) {
+            BigDecimal itemTotal = item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            totalAmount = totalAmount.add(itemTotal);
+        }
+
+        // 创建订单
+        int orderId = dbConnection.createOrder(user.getUserId(), totalAmount.doubleValue());
+
+        // 将购物车中的商品添加到订单项中
+        for (ProductWithQuantity item : cartItems) {
+            dbConnection.addOrderItem(orderId, item.getProduct().getProductId(), item.getQuantity(), item.getProduct().getPrice().doubleValue());
+        }
+
+        // 添加支付记录
+        dbConnection.addPaymentRecord(orderId, totalAmount, "Credit Card"); // 假设支付方式为信用卡
+
+        // 清空购物车
+        dbConnection.clearCart(user.getUserId());
+
+        // 刷新购物车显示
+        loadCartItems(user.getUserId());
+
+        JOptionPane.showMessageDialog(this, "订单已成功创建！订单号: " + orderId, "成功", JOptionPane.INFORMATION_MESSAGE);
+    } catch (SQLException e) {
+        System.out.println("Debug: Error processing payment: " + e.getMessage());
+        JOptionPane.showMessageDialog(this, "无法处理付款: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
     }
+}
 
     private void resetCart() {
         try {

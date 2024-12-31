@@ -79,20 +79,27 @@ public class LoginWindow extends JFrame {
                     DatabaseConnection dbConnection = new DatabaseConnection();
                     User user = dbConnection.getUserByUsername(username);
 
+                    System.out.println("Username: " + username);
+                    System.out.println("Password Hash from DB: " + (user != null ? user.getPasswordHash() : "null"));
+                    System.out.println("Encrypted Password: " + dbConnection.encrypt(password));
+
                     if (user != null && user.getPasswordHash().equals(dbConnection.encrypt(password))) {
                         JOptionPane.showMessageDialog(null, "登录成功!");
 
                         // 根据用户角色打开不同的界面
                         switch (user.getRole()) {
                             case "Admin":
-                                new AdminMenuPanel().setVisible(true);
+                                AdminMenuPanel adminPanel = new AdminMenuPanel();
+                                adminPanel.setVisible(true);
                                 break;
                             case "Merchant":
-                                new MerchantMenuPanel().setVisible(true);
+                                MerchantMenuPanel merchantPanel = new MerchantMenuPanel();
+                                merchantPanel.setVisible(true);
                                 break;
                             default:
                                 // 默认打开用户界面（假设有一个用户界面）
-                                new Menu(user).setVisible(true);
+                                Menu menu = new Menu(user);
+                                menu.setVisible(true);
                                 break;
                         }
                         dispose(); // 关闭登录窗口
@@ -110,7 +117,8 @@ public class LoginWindow extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // 打开注册窗口
-                new RegisterWindow().setVisible(true);
+                RegisterWindow registerWindow = new RegisterWindow();
+                registerWindow.setVisible(true);
                 dispose(); // 关闭登录窗口
             }
         });

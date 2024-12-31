@@ -1,5 +1,8 @@
 package User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class User {
     private int userId;
     private String username;
@@ -8,6 +11,7 @@ public class User {
     private String email;
     private String phoneNumber;
     private String registrationDate;
+    private List<UserAddress> addresses;
 
     public User(int userId, String username, String role, String passwordHash, String email, String phoneNumber, String registrationDate) {
         this.userId = userId;
@@ -17,6 +21,7 @@ public class User {
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.registrationDate = registrationDate;
+        this.addresses = new ArrayList<>();
     }
 
     // Getters and Setters
@@ -75,4 +80,15 @@ public class User {
     public void setRegistrationDate(String registrationDate) {
         this.registrationDate = registrationDate;
     }
+
+    public List<UserAddress> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<UserAddress> addresses) {
+        this.addresses = addresses;
+    }
 }
+
+
+

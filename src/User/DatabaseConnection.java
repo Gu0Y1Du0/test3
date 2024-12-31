@@ -249,7 +249,7 @@ public class DatabaseConnection {
     }
 
     public int createOrder(int userId, double totalAmount) throws SQLException {
-        String insertOrderQuery = "INSERT INTO orders (UserID, TotalAmount, OrderDate, Status) VALUES (?, ?, NOW(), 'Pending')";
+        String insertOrderQuery = "INSERT INTO orders (UserID, TotalAmount, OrderDate, Status) VALUES (?, ?, NOW(), 'Paid')";
         try (Connection connection = getConnection();
              PreparedStatement insertOrderStatement = connection.prepareStatement(insertOrderQuery, Statement.RETURN_GENERATED_KEYS)) {
             insertOrderStatement.setInt(1, userId);
@@ -277,33 +277,46 @@ public class DatabaseConnection {
         }
     }
 
-    public MyInformation getMyInformation() throws SQLException {
+    public void addPaymentRecord(int orderId, BigDecimal paymentAmount, String paymentMethod) throws SQLException {
+        // 使用 BigDecimal 来处理 Amount 字段，确保精度
+        String insertPaymentQuery = "INSERT INTO payments (OrderID, PaymentMethod, Amount) VALUES (?, ?, ?)";
+
+        try (Connection connection = getConnection();
+             PreparedStatement insertPaymentStatement = connection.prepareStatement(insertPaymentQuery)) {
+
+            insertPaymentStatement.setInt(1, orderId);
+            insertPaymentStatement.setString(2, paymentMethod);
+            insertPaymentStatement.setBigDecimal(3, paymentAmount);
+
+            insertPaymentStatement.executeUpdate();
+        }
+    }
+
+    public MyInformation getMyInformationByUserID(int userID) throws SQLException {
         MyInformation mif = new MyInformation();
         List<UserAddress> addresses = new ArrayList<>();
 
         // 查询用户信息
-        String query = "SELECT * FROM users WHERE Username = 'john_doe'";
-        try (Connection connection = getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
-
-            if (resultSet.next()) {
-                mif.setUserID(resultSet.getInt("UserID"));
-                mif.setUsername(resultSet.getString("Username"));
-                mif.setPasswordHash(resultSet.getString("PasswordHash"));  // 修正拼写错误
-                mif.setEmail(resultSet.getString("Email"));
-                mif.setPhoneNumber(resultSet.getString("PhoneNumber"));
-                mif.setRegistrationDate(resultSet.getString("RegistrationDate"));
+        String query = "SELECT * FROM users WHERE UserID = ?";
+        try (Connection connection = getConnection();  // 加上 getConnection()
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, userID);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    mif.setUserID(resultSet.getInt("UserID"));
+                    mif.setUsername(resultSet.getString("Username"));
+                    mif.setPasswordHash(resultSet.getString("PasswordHash"));  // 修正拼写错误
+                    mif.setEmail(resultSet.getString("Email"));
+                    mif.setPhoneNumber(resultSet.getString("PhoneNumber"));
+                    mif.setRegistrationDate(resultSet.getString("RegistrationDate"));
+                }
             }
         }
 
         // 使用从第一个查询获得的 UserID 查询用户地址
-//        int userID = mif.getUserID();
-        int userID = 1;  // 获取查询到的 UserID
         query = "SELECT * FROM useraddresses WHERE UserID = ?";
-        try (Connection connection = getConnection();
+        try (Connection connection = getConnection();  // 加上 getConnection()
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
             preparedStatement.setInt(1, userID);  // 设置动态查询条件
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
@@ -326,6 +339,7 @@ public class DatabaseConnection {
         mif.setAddresses(addresses);
         return mif;
     }
+
     public boolean updateUserInformation(int userID, String username, String passwordHash, String email, String phoneNumber) throws SQLException {
         String query = "UPDATE users SET Username = ?, PasswordHash = ?, Email = ?, PhoneNumber = ? WHERE UserID = ?";
 
@@ -341,5 +355,45 @@ public class DatabaseConnection {
             int rowsUpdated = preparedStatement.executeUpdate();
             return rowsUpdated > 0;  // 如果更新了至少一行，返回 true
         }
+    }
+
+    public List<Order> getOrdersByUserId(int userId) throws SQLException {
+        List<Order> orders = new ArrayList<>();
+        String query = "SELECT * FROM orders WHERE UserID = ?";
+        try (Connection connection = getConnection()) {
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Order order = new Order();
+                order.setOrderId(rs.getInt("OrderID"));
+                order.setUserId(rs.getInt("UserID"));
+                order.setTotalAmount(rs.getBigDecimal("TotalAmount"));
+                order.setOrderDate(rs.getTimestamp("OrderDate").toLocalDateTime());
+                order.setStatus(rs.getString("Status"));
+                orders.add(order);
+            }
+        }
+        return orders;
+    }
+
+    public List<Payment> getPaymentsByUserId(int userId) throws SQLException {
+        List<Payment> payments = new ArrayList<>();
+        String query = "SELECT p.* FROM payments p JOIN orders o ON p.OrderID = o.OrderID WHERE o.UserID = ?";
+        try (Connection connection = getConnection()) {
+            PreparedStatement stmt = connection.prepareStatement(query);
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Payment payment = new Payment();
+                payment.setPaymentId(rs.getInt("PaymentID"));
+                payment.setOrderId(rs.getInt("OrderID"));
+                payment.setPaymentMethod(rs.getString("PaymentMethod"));
+                payment.setAmount(rs.getBigDecimal("Amount"));
+                payment.setPaymentDate(rs.getTimestamp("PaymentDate").toLocalDateTime());
+                payments.add(payment);
+            }
+        }
+        return payments;
     }
 }
