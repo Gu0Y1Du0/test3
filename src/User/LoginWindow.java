@@ -1,5 +1,8 @@
 package User;
 
+import Admin.AdminMenuPanel;
+import Merchants.MerchantMenuPanel;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -72,11 +75,32 @@ public class LoginWindow extends JFrame {
                 String username = userText.getText();
                 String password = new String(passwordField.getPassword());
 
-                // 这里可以加入对用户名和密码的验证
-                if (username.equals("admin") && password.equals("123456")) {
-                    JOptionPane.showMessageDialog(null, "登录成功!");
-                } else {
-                    JOptionPane.showMessageDialog(null, "用户名或密码错误!");
+                try {
+                    DatabaseConnection dbConnection = new DatabaseConnection();
+                    User user = dbConnection.getUserByUsername(username);
+
+                    if (user != null && user.getPasswordHash().equals(dbConnection.encrypt(password))) {
+                        JOptionPane.showMessageDialog(null, "登录成功!");
+
+                        // 根据用户角色打开不同的界面
+                        switch (user.getRole()) {
+                            case "Admin":
+                                new AdminMenuPanel().setVisible(true);
+                                break;
+                            case "Merchant":
+                                new MerchantMenuPanel().setVisible(true);
+                                break;
+                            default:
+                                // 默认打开用户界面（假设有一个用户界面）
+                                new Menu(user).setVisible(true);
+                                break;
+                        }
+                        dispose(); // 关闭登录窗口
+                    } else {
+                        JOptionPane.showMessageDialog(null, "用户名或密码错误!");
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "登录失败: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -85,8 +109,9 @@ public class LoginWindow extends JFrame {
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // 在这里可以打开一个注册窗口
-                JOptionPane.showMessageDialog(null, "打开注册窗口");
+                // 打开注册窗口
+                new RegisterWindow().setVisible(true);
+                dispose(); // 关闭登录窗口
             }
         });
 
