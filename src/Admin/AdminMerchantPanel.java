@@ -5,21 +5,29 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class AdminMerchantPanel extends JPanel {
 
     private JTable merchantsTable;
     private DefaultTableModel tableModel;
 
-    public AdminMerchantPanel() {
+    public AdminMerchantPanel() throws SQLException {
         setLayout(new BorderLayout());
         // 顶部显示商家信息
         JLabel myTitle = new JLabel("商家信息", SwingConstants.CENTER);
+        myTitle.setFont(new Font("宋体", Font.BOLD, 24));
+        myTitle.setForeground(new Color(51, 51, 51));
+
         add(myTitle, BorderLayout.NORTH);
         initializeComponents();
     }
 
-    private void initializeComponents() {
+    private void initializeComponents() throws SQLException {
+
         // 商家表格的列名
         String[] columnNames = {"商家ID", "商家名称", "联系邮箱", "联系电话", "地址", "评分", "注册日期"};
 
@@ -27,6 +35,12 @@ public class AdminMerchantPanel extends JPanel {
         tableModel = new DefaultTableModel(columnNames, 0);
         merchantsTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(merchantsTable);
+        //拉取商家信息
+        DataBaseConnection db = new DataBaseConnection();
+        List<Merchant> merchants = db.getMerchant();
+        for(Object o : merchants.toArray()){
+            tableModel.addRow(new Object[]{o});
+        }
 
         // 创建按钮
         JButton addMerchantButton = new JButton("添加商家");
@@ -41,14 +55,22 @@ public class AdminMerchantPanel extends JPanel {
                 String contactEmail = JOptionPane.showInputDialog("请输入联系邮箱:");
                 String contactPhone = JOptionPane.showInputDialog("请输入联系电话:");
                 String address = JOptionPane.showInputDialog("请输入商家地址:");
-                String ratingStr = JOptionPane.showInputDialog("请输入商家评分:");
+                double Rating = Double.parseDouble(JOptionPane.showInputDialog("请输入商家评分:"));
+                LocalDateTime now = LocalDateTime.now();
+                DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                String RegistrationTime = now.format(customFormatter);
+                Merchant newMerchant = new Merchant(merchantName,contactEmail,contactPhone,address,Rating,RegistrationTime);
 
                 if (merchantName != null && contactEmail != null) {
-                    // 这里需要调用数据库操作，添加商家
+                    // 数据库操作添加商家
                     try {
-                        double rating = Double.parseDouble(ratingStr);
+                        db.AddMerchant(newMerchant);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    try {
                         // 在表格中添加商家的数据
-                        Object[] rowData = {tableModel.getRowCount() + 1, merchantName, contactEmail, contactPhone, address, rating, "当前时间"};
+                        Object[] rowData = {tableModel.getRowCount() + 1, merchantName, contactEmail, contactPhone, address, Rating, "当前时间"};
                         tableModel.addRow(rowData);
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(AdminMerchantPanel.this, "评分请输入有效的数字！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -62,9 +84,22 @@ public class AdminMerchantPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // 获取选中的商家
                 int selectedRow = merchantsTable.getSelectedRow();
+                Merchant selectedMerchant = new Merchant(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
+                        tableModel.getValueAt(selectedRow,1).toString(),
+                        tableModel.getValueAt(selectedRow,2).toString(),
+                        tableModel.getValueAt(selectedRow,3).toString(),
+                        tableModel.getValueAt(selectedRow,4).toString(),
+                        Double.parseDouble(tableModel.getValueAt(selectedRow,5).toString()),
+                        tableModel.getValueAt(selectedRow,6).toString()
+                );
                 if (selectedRow >= 0) {
                     int merchantID = (int) tableModel.getValueAt(selectedRow, 0);
-                    // 这里需要调用数据库操作，删除选中的商家
+                    // 数据库删除商家
+                    try {
+                        db.DeleteMerchant(selectedMerchant);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     tableModel.removeRow(selectedRow);
                     JOptionPane.showMessageDialog(AdminMerchantPanel.this, "商家ID " + merchantID + " 已删除", "提示", JOptionPane.INFORMATION_MESSAGE);
                 } else {
@@ -106,7 +141,12 @@ public class AdminMerchantPanel extends JPanel {
         frame.setSize(800, 600);
         frame.setLocationRelativeTo(null);
 
-        AdminMerchantPanel adminMerchantPanel = new AdminMerchantPanel();
+        AdminMerchantPanel adminMerchantPanel = null;
+        try {
+            adminMerchantPanel = new AdminMerchantPanel();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         adminMerchantPanel.loadMerchantsData();
         frame.getContentPane().add(adminMerchantPanel);
 

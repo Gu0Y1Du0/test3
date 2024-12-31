@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
 public class AdminMenuPanel extends JPanel {
     private CardLayout cardLayout;
@@ -32,14 +33,16 @@ public class AdminMenuPanel extends JPanel {
         manageProductsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(AdminMenuPanel.this, "管理商品功能正在开发中...", "提示", JOptionPane.INFORMATION_MESSAGE);
+                // 切换到商品管理面板
+                cardLayout.show(cardPanel, "commodity");
             }
         });
 
         manageUsersButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(AdminMenuPanel.this, "管理用户功能正在开发中...", "提示", JOptionPane.INFORMATION_MESSAGE);
+                // 切换到用户管理面板
+                cardLayout.show(cardPanel, "user");
             }
         });
 
@@ -67,13 +70,45 @@ public class AdminMenuPanel extends JPanel {
         cardPanel = new JPanel(cardLayout);
 
         // 创建商家管理面板
-        AdminMerchantPanel adminMerchantPanel = new AdminMerchantPanel();
+        AdminMerchantPanel adminMerchantPanel = null;
+        try {
+            adminMerchantPanel = new AdminMerchantPanel();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+
         // 将商家管理面板添加到卡片布局
         cardPanel.add(adminMerchantPanel, "merchants");
         // 将 cardPanel 添加到中心
         add(cardPanel, BorderLayout.CENTER);
         // 将按钮面板添加到底部
         add(buttonPanel, BorderLayout.SOUTH);
+
+
+        // 创建商品管理面板
+        AdminCommdityPanel adminCommdityPanel = null;
+        try{
+            adminCommdityPanel = new AdminCommdityPanel();
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+        // 将商家管理面板添加到卡片布局
+        cardPanel.add(adminCommdityPanel, "commdity");
+        // 将 cardPanel 添加到中心
+        add(cardPanel, BorderLayout.CENTER);
+        // 将按钮面板添加到底部
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        // 创建用户管理面板
+        AdminUserPanel adminUserPanel = null;
+        try {
+            adminUserPanel = new AdminUserPanel();
+        }catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+        cardPanel.add(adminUserPanel, "user");
+        add(cardPanel, BorderLayout.SOUTH );
 
     }
 
