@@ -426,7 +426,7 @@ public class DatabaseConnection {
 
     public Integer getMerchantIDByUserID(int userID) throws SQLException {
         Integer merchantID = null;
-        String query = "SELECT MerchantID FROM merchant_users WHERE UserID = ?";
+        String query = "SELECT MerchantID FROM users WHERE UserID = ?";
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
