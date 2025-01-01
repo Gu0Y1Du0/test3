@@ -36,7 +36,7 @@ public class DataBaseConnection {
 
     public List<Merchant> getMerchant() throws SQLException {
         List<Merchant> merchants = new ArrayList<>();
-        String query = "SELECT * FROM merchants";
+        String query = "SELECT * FROM merchants;";
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query);

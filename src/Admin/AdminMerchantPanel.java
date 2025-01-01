@@ -38,8 +38,17 @@ public class AdminMerchantPanel extends JPanel {
         //拉取商家信息
         DataBaseConnection db = new DataBaseConnection();
         List<Merchant> merchants = db.getMerchant();
-        for(Object o : merchants.toArray()){
-            tableModel.addRow(new Object[]{o});
+        for(Merchant merchant : merchants){
+            Object[] rowData = {
+                    merchant.getMerchantID(),
+                    merchant.getMerchantName(),
+                    merchant.getContactEmail(),
+                    merchant.getContactPhone(),
+                    merchant.getAddress(),
+                    merchant.getRating(),
+                    merchant.getRegistrationDate()
+            };
+            tableModel.addRow(rowData);
         }
 
         // 创建按钮

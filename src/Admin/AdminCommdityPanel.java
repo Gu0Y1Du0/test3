@@ -17,7 +17,7 @@ public class AdminCommdityPanel extends JPanel {
     public AdminCommdityPanel() throws SQLException{
         setLayout(new BorderLayout());
         // 顶部显示商品管理
-        JLabel myTitle = new JLabel("商品管理");
+        JLabel myTitle = new JLabel("商品管理", SwingConstants.CENTER);
         myTitle.setFont(new Font("宋体", Font.BOLD, 24));
         myTitle.setForeground(new Color(51, 51, 51));
         add(myTitle, BorderLayout.NORTH);
@@ -35,8 +35,18 @@ public class AdminCommdityPanel extends JPanel {
         // 拉取商品信息
         DataBaseConnection db = new DataBaseConnection();
         List<Commdity> commdities = db.getCommdity();
-        for(Object o : commdities.toArray()){
-            tableModel.addRow(new Object[]{o});
+        for(Commdity commdity : commdities){
+            Object[] rowData = {
+                    commdity.getProductID(),
+                    commdity.getProductName(),
+                    commdity.getProductDescription(),
+                    commdity.getProductPrice(),
+                    commdity.getProductStock(),
+                    commdity.getCategoryID(),
+                    commdity.getCreateAt(),
+                    commdity.getMerchantID()
+            };
+            tableModel.addRow(rowData);
         }
 
         // 创建按钮

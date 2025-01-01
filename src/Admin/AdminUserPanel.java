@@ -36,8 +36,17 @@ public class AdminUserPanel extends JPanel {
         //拉取用户信息
         DataBaseConnection db = new DataBaseConnection();
         List<User> users = db.getUser();
-        for(Object o : users.toArray()){
-            tableModel.addRow(new Object[]{o});
+        for(User user : users){
+            Object[] rowData = {
+                    user.getUserID(),
+                    user.getUsername(),
+                    user.getRole(),
+                    user.getPasswordHash(),
+                    user.getEmail(),
+                    user.getPhoneNumber(),
+                    user.getRegistrationDate()
+            };
+            tableModel.addRow(rowData);
         }
 
         // 创建按钮
