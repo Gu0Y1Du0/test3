@@ -23,6 +23,15 @@ public class UserAddress {
         this.country = country;
         this.isDefault = isDefault;
     }
+
+    public UserAddress(String city, String state, String postalCode, String country, boolean isDefault) {
+        this.city = city;
+        this.state = state;
+        this.postalCode = postalCode;
+        this.country = country;
+        this.isDefault = isDefault;
+    }
+
     // Getter 和 Setter 方法
     //addressID
     public int getAddressID() {

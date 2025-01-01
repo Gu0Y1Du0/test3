@@ -18,15 +18,15 @@ public class CartPanel extends JPanel {
         this.user = user;
         setLayout(new BorderLayout());
 
-        JLabel cartTitle = new JLabel("ShoppingCart", SwingConstants.CENTER);
-        cartTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel cartTitle = new JLabel("购物车", SwingConstants.CENTER);
+        cartTitle.setFont(new Font("Microsoft YaHei", Font.BOLD, 24));
         add(cartTitle, BorderLayout.NORTH);
 
         // 表格模型
-        String[] columnNames = {"ProductID", "ProductName", "Price", "Quantity"};
+        String[] columnNames = {"产品ID", "产品名称", "价格", "数量"};
         tableModel = new DefaultTableModel(columnNames, 0);
         cartItemsTable = new JTable(tableModel);
-        cartItemsTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+        cartItemsTable.getTableHeader().setFont(new Font("Microsoft YaHei", Font.BOLD, 14));
         cartItemsTable.setRowHeight(30);
 
         JScrollPane scrollPane = new JScrollPane(cartItemsTable);
@@ -66,10 +66,10 @@ public class CartPanel extends JPanel {
             tableModel.setRowCount(0); // 清空表格
 
             if (cartItems.isEmpty()) {
-                System.out.println("Debug: Cart is empty for user ID: " + userID);
+                System.out.println("调试: 用户 ID " + userID + " 的购物车为空");
                 // 不在这里显示消息
             } else {
-                System.out.println("Debug: Cart items found for user ID: " + userID);
+                System.out.println("调试: 用户 ID " + userID + " 的购物车中有商品");
                 for (ProductWithQuantity item : cartItems) {
                     Object[] row = {
                         item.getProduct().getProductId(),
@@ -81,51 +81,51 @@ public class CartPanel extends JPanel {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Debug: Error loading cart items: " + e.getMessage());
+            System.out.println("调试: 加载购物车内容时出错: " + e.getMessage());
             JOptionPane.showMessageDialog(this, "无法加载购物车内容: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void processPayment() {
-    try {
-        DatabaseConnection dbConnection = new DatabaseConnection();
-        ArrayList<ProductWithQuantity> cartItems = dbConnection.getCartItemsByUserID(user.getUserId());
+        try {
+            DatabaseConnection dbConnection = new DatabaseConnection();
+            ArrayList<ProductWithQuantity> cartItems = dbConnection.getCartItemsByUserID(user.getUserId());
 
-        if (cartItems.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "购物车为空，无法支付！", "提示", JOptionPane.INFORMATION_MESSAGE);
-            return;
+            if (cartItems.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "购物车为空，无法支付！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            // 计算总金额
+            BigDecimal totalAmount = BigDecimal.ZERO;
+            for (ProductWithQuantity item : cartItems) {
+                BigDecimal itemTotal = item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                totalAmount = totalAmount.add(itemTotal);
+            }
+
+            // 创建订单
+            int orderId = dbConnection.createOrder(user.getUserId(), totalAmount.doubleValue());
+
+            // 将购物车中的商品添加到订单项中
+            for (ProductWithQuantity item : cartItems) {
+                dbConnection.addOrderItem(orderId, item.getProduct().getProductId(), item.getQuantity(), item.getProduct().getPrice().doubleValue());
+            }
+
+            // 添加支付记录
+            dbConnection.addPaymentRecord(orderId, totalAmount, "信用卡"); // 假设支付方式为信用卡
+
+            // 清空购物车
+            dbConnection.clearCart(user.getUserId());
+
+            // 刷新购物车显示
+            loadCartItems(user.getUserId());
+
+            JOptionPane.showMessageDialog(this, "订单已成功创建！订单号: " + orderId, "成功", JOptionPane.INFORMATION_MESSAGE);
+        } catch (SQLException e) {
+            System.out.println("调试: 处理付款时出错: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "无法处理付款: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
         }
-
-        // 计算总金额
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        for (ProductWithQuantity item : cartItems) {
-            BigDecimal itemTotal = item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
-            totalAmount = totalAmount.add(itemTotal);
-        }
-
-        // 创建订单
-        int orderId = dbConnection.createOrder(user.getUserId(), totalAmount.doubleValue());
-
-        // 将购物车中的商品添加到订单项中
-        for (ProductWithQuantity item : cartItems) {
-            dbConnection.addOrderItem(orderId, item.getProduct().getProductId(), item.getQuantity(), item.getProduct().getPrice().doubleValue());
-        }
-
-        // 添加支付记录
-        dbConnection.addPaymentRecord(orderId, totalAmount, "Credit Card"); // 假设支付方式为信用卡
-
-        // 清空购物车
-        dbConnection.clearCart(user.getUserId());
-
-        // 刷新购物车显示
-        loadCartItems(user.getUserId());
-
-        JOptionPane.showMessageDialog(this, "订单已成功创建！订单号: " + orderId, "成功", JOptionPane.INFORMATION_MESSAGE);
-    } catch (SQLException e) {
-        System.out.println("Debug: Error processing payment: " + e.getMessage());
-        JOptionPane.showMessageDialog(this, "无法处理付款: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
     }
-}
 
     private void resetCart() {
         try {
@@ -137,8 +137,23 @@ public class CartPanel extends JPanel {
 
             JOptionPane.showMessageDialog(this, "购物车已清空！", "成功", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
-            System.out.println("Debug: Error resetting cart: " + e.getMessage());
+            System.out.println("调试: 清空购物车时出错: " + e.getMessage());
             JOptionPane.showMessageDialog(this, "无法清空购物车: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    public static void main(String[] args) {
+
+        User user = new User(1, "张三", "user", "passwordHash", "zhangsan@example.com", "1234567890", "2024-12-30");
+
+        JFrame frame = new JFrame("购物车界面");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
+
+        CartPanel cartPanel = new CartPanel(user);
+        frame.getContentPane().add(cartPanel);
+
+        frame.setVisible(true);
     }
 }

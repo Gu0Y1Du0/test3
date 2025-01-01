@@ -90,11 +90,11 @@ public class LoginWindow extends JFrame {
                         switch (user.getRole()) {
                             case "Admin":
                                 AdminMenuPanel adminPanel = new AdminMenuPanel();
-                                adminPanel.setVisible(true);
+                                openMainPanel(adminPanel);
                                 break;
                             case "Merchant":
-                                MerchantMenuPanel merchantPanel = new MerchantMenuPanel();
-                                merchantPanel.setVisible(true);
+                                MerchantMenuPanel merchantPanel = new MerchantMenuPanel(user);
+                                openMainPanel(merchantPanel);
                                 break;
                             default:
                                 // 默认打开用户界面（假设有一个用户界面）
@@ -119,7 +119,7 @@ public class LoginWindow extends JFrame {
                 // 打开注册窗口
                 RegisterWindow registerWindow = new RegisterWindow();
                 registerWindow.setVisible(true);
-                dispose(); // 关闭登录窗口
+                // 不需要在这里关闭登录窗口，因为注册完成后会返回登录窗口
             }
         });
 
@@ -128,6 +128,17 @@ public class LoginWindow extends JFrame {
 
         // 设置窗口居中显示
         setLocationRelativeTo(null);
+    }
+
+    private void openMainPanel(JPanel panel) {
+        JFrame frame = new JFrame("主界面");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
+
+        frame.getContentPane().add(panel);
+
+        frame.setVisible(true);
     }
 
     // 主函数
