@@ -163,6 +163,7 @@ public class AdminUserPanel extends JPanel {
                     JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
                 }
                 selectedRow = UserTable.getSelectedRow();
+
                 User selectedUser = new User(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
                         tableModel.getValueAt(selectedRow,1).toString(),
                         tableModel.getValueAt(selectedRow,2).toString(),
@@ -172,18 +173,34 @@ public class AdminUserPanel extends JPanel {
                         tableModel.getValueAt(selectedRow,6).toString()
                 );
                 String newRole = JOptionPane.showInputDialog("请输入新身份:");
-                if (selectedRow >= 0) {
-                    int userID = (int) tableModel.getValueAt(selectedRow, 0);
-                    // 数据库更改用户密码
-                    try {
-                        db.UpdateUserRole(selectedUser, newRole);
-                    } catch (SQLException ex) {
-                        throw new RuntimeException(ex);
+                String Address;
+                double rating = 2.0;
+                Merchant selectedMerchant;
+                if(newRole.equals("Merchant")){
+                    Address = JOptionPane.showInputDialog("请输入地址:");
+                    selectedMerchant = new Merchant(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
+                            tableModel.getValueAt(selectedRow,1).toString(),
+                            tableModel.getValueAt(selectedRow,4).toString(),
+                            tableModel.getValueAt(selectedRow,5).toString(),
+                            Address,
+                            rating,
+                            tableModel.getValueAt(selectedRow,6).toString()
+                    );
+                    if (selectedRow >= 0) {
+                        int userID = (int) tableModel.getValueAt(selectedRow, 0);
+                        // 数据库更改用户身份
+                        try {
+                            db.UpdateUserRole(selectedUser, newRole);
+                            db.AddMerchant(selectedMerchant);
+                            db.getNewMerchantIDtoUser(selectedUser);
+                        } catch (SQLException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        tableModel.setValueAt(newRole, selectedRow, 2);
+                        JOptionPane.showMessageDialog(AdminUserPanel.this, "商家ID " + userID + " 身份已更新为" + newRole, "提示", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
                     }
-                    tableModel.setValueAt(newRole, selectedRow, 2);
-                    JOptionPane.showMessageDialog(AdminUserPanel.this, "商家ID " + userID + " 身份已更新为" + newRole, "提示", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });

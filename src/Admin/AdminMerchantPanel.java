@@ -59,8 +59,11 @@ public class AdminMerchantPanel extends JPanel {
         addMerchantButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // 模拟弹出一个窗口添加商家
+                // 弹出一个窗口添加商家
+                String UserID = JOptionPane.showInputDialog("请输入要成为商家的用户ID：");
                 String merchantName = JOptionPane.showInputDialog("请输入商家名称:");
+                String role = "Merchrant";
+                String PassWordHash = JOptionPane.showInputDialog("请输入该商家密码：");
                 String contactEmail = JOptionPane.showInputDialog("请输入联系邮箱:");
                 String contactPhone = JOptionPane.showInputDialog("请输入联系电话:");
                 String address = JOptionPane.showInputDialog("请输入商家地址:");
@@ -68,22 +71,26 @@ public class AdminMerchantPanel extends JPanel {
                 LocalDateTime now = LocalDateTime.now();
                 DateTimeFormatter customFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String RegistrationTime = now.format(customFormatter);
+                User merchantUser = new User(Integer.parseInt(UserID), merchantName, role, PassWordHash, contactEmail, contactPhone, RegistrationTime);
                 Merchant newMerchant = new Merchant(merchantName,contactEmail,contactPhone,address,Rating,RegistrationTime);
+
+                try {
+                    // 在表格中添加商家的数据
+                    Object[] rowData = {tableModel.getRowCount() + 1, merchantName, contactEmail, contactPhone, address, Rating, "当前时间"};
+                    tableModel.addRow(rowData);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(AdminMerchantPanel.this, "评分请输入有效的数字！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
 
                 if (merchantName != null && contactEmail != null) {
                     // 数据库操作添加商家
                     try {
                         db.AddMerchant(newMerchant);
+                        db.AddMerchanttoUser(newMerchant, merchantUser);
                     } catch (SQLException ex) {
                         throw new RuntimeException(ex);
                     }
-                    try {
-                        // 在表格中添加商家的数据
-                        Object[] rowData = {tableModel.getRowCount() + 1, merchantName, contactEmail, contactPhone, address, Rating, "当前时间"};
-                        tableModel.addRow(rowData);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(AdminMerchantPanel.this, "评分请输入有效的数字！", "错误", JOptionPane.ERROR_MESSAGE);
-                    }
+
                 }
             }
         });
