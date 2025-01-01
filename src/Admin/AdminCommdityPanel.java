@@ -81,6 +81,10 @@ public class AdminCommdityPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // 获取选中的商品
                 int selectedRow = commdityTable.getSelectedRow();
+                if(selectedRow == -1){
+                    JOptionPane.showMessageDialog(AdminCommdityPanel.this, "请先选择一个商品", "提示", JOptionPane.WARNING_MESSAGE);
+                }
+                selectedRow = commdityTable.getSelectedRow();
                 Commdity selectedCommdity = new Commdity(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
                         tableModel.getValueAt(selectedRow,1).toString(),
                         tableModel.getValueAt(selectedRow,2).toString(),

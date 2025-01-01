@@ -93,6 +93,10 @@ public class AdminMerchantPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // 获取选中的商家
                 int selectedRow = merchantsTable.getSelectedRow();
+                if(selectedRow == -1){
+                    JOptionPane.showMessageDialog(AdminMerchantPanel.this, "请先选择一个商家", "提示", JOptionPane.WARNING_MESSAGE);
+                }
+                selectedRow = merchantsTable.getSelectedRow();
                 Merchant selectedMerchant = new Merchant(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
                         tableModel.getValueAt(selectedRow,1).toString(),
                         tableModel.getValueAt(selectedRow,2).toString(),

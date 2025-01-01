@@ -92,6 +92,10 @@ public class AdminUserPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // 获取选中的商家
                 int selectedRow = UserTable.getSelectedRow();
+                if(selectedRow == -1){
+                    JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
+                }
+                selectedRow = UserTable.getSelectedRow();
                 User selectedUser = new User(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
                         tableModel.getValueAt(selectedRow,1).toString(),
                         tableModel.getValueAt(selectedRow,2).toString(),
@@ -121,6 +125,10 @@ public class AdminUserPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // 获取选中的商家
                 int selectedRow = UserTable.getSelectedRow();
+                if(selectedRow == -1){
+                    JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
+                }
+                selectedRow = UserTable.getSelectedRow();
                 User selectedUser = new User(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
                         tableModel.getValueAt(selectedRow,1).toString(),
                         tableModel.getValueAt(selectedRow,2).toString(),
@@ -151,6 +159,10 @@ public class AdminUserPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // 获取选中的商家
                 int selectedRow = UserTable.getSelectedRow();
+                if(selectedRow == -1){
+                    JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
+                }
+                selectedRow = UserTable.getSelectedRow();
                 User selectedUser = new User(Integer.parseInt(tableModel.getValueAt(selectedRow,0).toString()),
                         tableModel.getValueAt(selectedRow,1).toString(),
                         tableModel.getValueAt(selectedRow,2).toString(),
@@ -171,7 +183,7 @@ public class AdminUserPanel extends JPanel {
                     tableModel.setValueAt(newRole, selectedRow, 2);
                     JOptionPane.showMessageDialog(AdminUserPanel.this, "商家ID " + userID + " 身份已更新为" + newRole, "提示", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个商家", "提示", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(AdminUserPanel.this, "请先选择一个用户", "提示", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
