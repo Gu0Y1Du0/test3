@@ -77,15 +77,6 @@ public class AdminMenuPanel extends JPanel {
             throw new RuntimeException(e);
         }
 
-
-        // 将商家管理面板添加到卡片布局
-        cardPanel.add(adminMerchantPanel, "merchants");
-        // 将 cardPanel 添加到中心
-        add(cardPanel, BorderLayout.CENTER);
-        // 将按钮面板添加到底部
-        add(buttonPanel, BorderLayout.SOUTH);
-
-
         // 创建商品管理面板
         AdminCommdityPanel adminCommdityPanel = null;
         try{
@@ -93,12 +84,6 @@ public class AdminMenuPanel extends JPanel {
         }catch (SQLException e){
             throw new RuntimeException(e);
         }
-        // 将商家管理面板添加到卡片布局
-        cardPanel.add(adminCommdityPanel, "commdity");
-        // 将 cardPanel 添加到中心
-        add(cardPanel, BorderLayout.CENTER);
-        // 将按钮面板添加到底部
-        add(buttonPanel, BorderLayout.SOUTH);
 
         // 创建用户管理面板
         AdminUserPanel adminUserPanel = null;
@@ -107,8 +92,16 @@ public class AdminMenuPanel extends JPanel {
         }catch (SQLException e){
             throw new RuntimeException(e);
         }
+
+        // 将不同管理面板添加到卡片布局
+        cardPanel.add(adminMerchantPanel, "merchants");
+        cardPanel.add(adminCommdityPanel, "commodity");
         cardPanel.add(adminUserPanel, "user");
-        add(cardPanel, BorderLayout.SOUTH );
+
+        // 将 cardPanel 添加到中心
+        add(cardPanel, BorderLayout.CENTER);
+        // 将按钮面板添加到底部
+        add(buttonPanel, BorderLayout.SOUTH);
 
     }
 
@@ -120,8 +113,6 @@ public class AdminMenuPanel extends JPanel {
 
         AdminMenuPanel adminMenuPanel = new AdminMenuPanel();
         frame.getContentPane().add(adminMenuPanel);
-
-
 
         frame.setVisible(true);
     }
