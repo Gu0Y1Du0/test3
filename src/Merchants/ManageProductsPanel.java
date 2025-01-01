@@ -235,7 +235,7 @@ public class ManageProductsPanel extends JPanel {
             Connection conn = dbConnection.getConnection();
 
             // 获取商户ID
-            PreparedStatement pstmtMerchantUser = conn.prepareStatement("SELECT MerchantID FROM merchant_users WHERE UserID = ?");
+            PreparedStatement pstmtMerchantUser = conn.prepareStatement("SELECT MerchantID FROM users WHERE UserID = ?");
             pstmtMerchantUser.setInt(1, userID);
             ResultSet rsMerchantUser = pstmtMerchantUser.executeQuery();
 
