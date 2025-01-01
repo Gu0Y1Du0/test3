@@ -1,5 +1,8 @@
 package User;
 
+import Merchants.OrderWithDetails;
+import Merchants.MerchantInfo;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -395,5 +398,134 @@ public class DatabaseConnection {
             }
         }
         return payments;
+    }
+
+    public List<Product> getProductsByMerchantID(int merchantID) throws SQLException {
+        List<Product> products = new ArrayList<>();
+        String query = "SELECT ProductID, ProductName, Description, Price, Stock FROM products WHERE MerchantID = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, merchantID);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                Product product = new Product(
+                        resultSet.getInt("ProductID"),
+                        resultSet.getString("ProductName"),
+                        resultSet.getString("Description"),
+                        resultSet.getBigDecimal("Price"),
+                        resultSet.getInt("Stock")
+                );
+                products.add(product);
+            }
+        }
+        return products;
+    }
+
+    public Integer getMerchantIDByUserID(int userID) throws SQLException {
+        Integer merchantID = null;
+        String query = "SELECT MerchantID FROM merchant_users WHERE UserID = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, userID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                merchantID = resultSet.getInt("MerchantID");
+            }
+        }
+        System.out.println(merchantID);
+        return merchantID;
+    }
+
+    public List<OrderWithDetails> getOrdersByMerchantID(int merchantID) throws SQLException {
+        List<OrderWithDetails> orders = new ArrayList<>();
+        String query = "SELECT * FROM view_merchant_orders WHERE MerchantID = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, merchantID);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                OrderWithDetails order = new OrderWithDetails(
+                        resultSet.getString("MerchantName"),
+                        resultSet.getString("ContactEmail"),
+                        resultSet.getString("ContactPhone"),
+                        resultSet.getString("Address"),
+                        resultSet.getDouble("Rating"),
+                        resultSet.getDate("RegistrationDate"),
+                        resultSet.getString("ProductName"),
+                        resultSet.getBigDecimal("TotalAmount"),
+                        resultSet.getDate("OrderDate"),
+                        resultSet.getString("Status"),
+                        resultSet.getInt("Quantity"),
+                        resultSet.getInt("merchantID"),
+                        resultSet.getInt("orderID")
+
+                );
+                orders.add(order);
+            }
+        }
+        return orders;
+    }
+
+    public boolean deleteOrderById(int orderId) throws SQLException {
+        String query = "DELETE FROM orders WHERE OrderID = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, orderId);
+
+            int affectedRows = preparedStatement.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
+
+    public boolean updateOrderStatusToCompleted(int orderId) throws SQLException {
+        String query = "UPDATE orders SET Status = 'Completed' WHERE OrderID = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            System.out.println(orderId);
+            preparedStatement.setInt(1, orderId);
+
+            int affectedRows = preparedStatement.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
+
+    public MerchantInfo getMerchantInfoByUserID(int userID) throws SQLException {
+        String query = "SELECT * FROM view_user_merchant WHERE UserID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, userID);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new MerchantInfo(
+                    rs.getString("Username"),
+                    rs.getString("Role"),
+                    rs.getString("Email"),
+                    rs.getString("PhoneNumber"),
+                    rs.getDate("UserRegistrationDate"),
+                    rs.getString("MerchantName"),
+                    rs.getString("ContactEmail"),
+                    rs.getString("ContactPhone"),
+                    rs.getString("Address"),
+                    rs.getDouble("Rating"),
+                    rs.getDate("MerchantRegistrationDate")
+                );
+            }
+        }
+        return null;
     }
 }

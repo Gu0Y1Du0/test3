@@ -1,65 +1,72 @@
 package Merchants;
 
+import User.User;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class MerchantMenuPanel extends JPanel {
-    public MerchantMenuPanel() {
+    private JPanel contentPanel;
+    private ManageProductsPanel manageProductsPanel;
+    private ManageOrdersPanel manageOrdersPanel;
+    private MyProfilePanel myProfilePanel;
+    private User currentUser;
+
+    public MerchantMenuPanel(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        this.currentUser = user;
         setLayout(new BorderLayout());
         initializeComponents();
     }
 
     private void initializeComponents() {
-        // 创建按钮
+        // 创建内容面板
+        contentPanel = new JPanel(new CardLayout());
+        manageProductsPanel = new ManageProductsPanel(currentUser); // 确保正确实例化并传递 currentUser
+        manageOrdersPanel = new ManageOrdersPanel(currentUser);     // 确保正确实例化并传递 currentUser
+        myProfilePanel = new MyProfilePanel(currentUser);         // 确保正确实例化并传递 currentUser
+
+        contentPanel.add(manageProductsPanel, "ManageProducts");
+        contentPanel.add(manageOrdersPanel, "ManageOrders");
+        contentPanel.add(myProfilePanel, "MyProfile");
+
+        // 创建导航栏
+        JPanel navPanel = createNavPanel();
+
+        // 添加组件到主面板
+        add(navPanel, BorderLayout.NORTH);
+        add(contentPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createNavPanel() {
+        JPanel navPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
         JButton manageProductsButton = new JButton("管理商品");
         JButton manageOrdersButton = new JButton("管理订单");
         JButton myProfileButton = new JButton("我的");
 
-        // 设置按钮的事件监听器
-        manageProductsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MerchantMenuPanel.this, "管理商品功能正在开发中...", "提示", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
+        manageProductsButton.addActionListener(e -> ((CardLayout) contentPanel.getLayout()).show(contentPanel, "ManageProducts"));
+        manageOrdersButton.addActionListener(e -> ((CardLayout) contentPanel.getLayout()).show(contentPanel, "ManageOrders"));
+        myProfileButton.addActionListener(e -> ((CardLayout) contentPanel.getLayout()).show(contentPanel, "MyProfile"));
 
-        manageOrdersButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MerchantMenuPanel.this, "管理订单功能正在开发中...", "提示", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-        myProfileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(MerchantMenuPanel.this, "我的功能正在开发中...", "提示", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-        // 创建面板来放置按钮
-        JPanel buttonPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-
-        // 设置网格布局约束
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
-        buttonPanel.add(manageProductsButton, gbc);
+        navPanel.add(manageProductsButton, gbc);
 
         gbc.gridx = 1;
         gbc.anchor = GridBagConstraints.CENTER;
-        buttonPanel.add(manageOrdersButton, gbc);
+        navPanel.add(manageOrdersButton, gbc);
 
         gbc.gridx = 2;
         gbc.anchor = GridBagConstraints.EAST;
-        buttonPanel.add(myProfileButton, gbc);
+        navPanel.add(myProfileButton, gbc);
 
-        // 将按钮面板添加到底部
-        add(buttonPanel, BorderLayout.SOUTH);
+        return navPanel;
     }
 
     public static void main(String[] args) {
@@ -68,9 +75,13 @@ public class MerchantMenuPanel extends JPanel {
         frame.setSize(800, 600);
         frame.setLocationRelativeTo(null);
 
-        MerchantMenuPanel merchantMenuPanel = new MerchantMenuPanel();
+        User currentUser = new User(1, "username", "role", "passwordHash", "email@example.com", "1234567890", "2024-12-30");
+        MerchantMenuPanel merchantMenuPanel = new MerchantMenuPanel(currentUser);
         frame.getContentPane().add(merchantMenuPanel);
 
         frame.setVisible(true);
     }
 }
+
+
+

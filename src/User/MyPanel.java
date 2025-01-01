@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MyPanel extends JPanel {
@@ -26,23 +27,23 @@ public class MyPanel extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
 
         // 顶部欢迎栏
-        JLabel myTitle = new JLabel("Welcome, Dear " + user.getUsername() + "!", SwingConstants.CENTER);
-        myTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        JLabel myTitle = new JLabel("欢迎, " + user.getUsername() + "!", SwingConstants.CENTER);
+        myTitle.setFont(new Font("Microsoft YaHei", Font.BOLD, 24));  // 使用支持中文的字体
         myTitle.setForeground(new Color(51, 51, 51));
         add(myTitle, BorderLayout.NORTH);
 
         // 用户信息字段
-        addLabeledField(userInfoPanel, "Name:", user.getUsername(), gbc, 0, 0);
+        addLabeledField(userInfoPanel, "用户名:", user.getUsername(), gbc, 0, 0);
         addLabeledField(userInfoPanel, "ID:", String.valueOf(user.getUserId()), gbc, 0, 1);
-        addLabeledField(userInfoPanel, "Email:", user.getEmail(), gbc, 0, 2);
-        addLabeledField(userInfoPanel, "Phone Number:", user.getPhoneNumber(), gbc, 0, 3);
-        addLabeledField(userInfoPanel, "Registration Date:", user.getRegistrationDate().toString(), gbc, 0, 4);
+        addLabeledField(userInfoPanel, "邮箱:", user.getEmail(), gbc, 0, 2);
+        addLabeledField(userInfoPanel, "电话号码:", user.getPhoneNumber(), gbc, 0, 3);
+        addLabeledField(userInfoPanel, "注册日期:", user.getRegistrationDate().toString(), gbc, 0, 4);
 
         // 地址部分：首先显示默认地址
         JPanel addressPanel = new JPanel();
         addressPanel.setLayout(new BoxLayout(addressPanel, BoxLayout.Y_AXIS));
         addressPanel.setBackground(Color.WHITE);
-        addressPanel.setBorder(BorderFactory.createTitledBorder("Addresses"));
+        addressPanel.setBorder(BorderFactory.createTitledBorder("地址"));
 
         UserAddress defaultAddress = findDefaultAddress(user.getAddresses());
         if (defaultAddress != null) {
@@ -55,10 +56,10 @@ public class MyPanel extends JPanel {
                 BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)
             ));
-            addressPanel.add(new JLabel("Default Address:"));
+            addressPanel.add(new JLabel("默认地址:"));
             addressPanel.add(defaultAddressArea);
         } else {
-            addressPanel.add(new JLabel("No default address found."));
+            addressPanel.add(new JLabel("还没有默认地址"));
         }
 
         // 使用 JComboBox 显示其他地址
@@ -69,7 +70,7 @@ public class MyPanel extends JPanel {
             }
         }
         addressComboBox.setPreferredSize(new Dimension(300, 30));  // 调整宽度以匹配其他字段
-        addressPanel.add(new JLabel("Other Addresses:"));
+        addressPanel.add(new JLabel("其他地址:"));
         addressPanel.add(addressComboBox);
 
         // 添加地址面板到用户信息面板
@@ -107,7 +108,7 @@ public class MyPanel extends JPanel {
 
     private void addLabeledField(JPanel panel, String label, String value, GridBagConstraints gbc, int x, int y) {
         JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Arial", Font.BOLD, 14));
+        lbl.setFont(new Font("Microsoft YaHei", Font.BOLD, 14));  // 使用支持中文的字体
         lbl.setForeground(new Color(51, 51, 51));
         gbc.gridx = x;
         gbc.gridy = y;
@@ -115,7 +116,7 @@ public class MyPanel extends JPanel {
 
         JTextField textField = new JTextField(value);
         textField.setEditable(false);
-        textField.setFont(new Font("Arial", Font.PLAIN, 14));
+        textField.setFont(new Font("Microsoft YaHei", Font.PLAIN, 14));  // 使用支持中文的字体
         textField.setForeground(new Color(51, 51, 51));
         textField.setBackground(new Color(240, 240, 240));
         textField.setBorder(BorderFactory.createCompoundBorder(
@@ -185,4 +186,21 @@ public class MyPanel extends JPanel {
 
         paymentsFrame.setVisible(true);
     }
+
+    public static void main(String[] args) {
+        User user = new User(1, "张三", "user", "passwordHash", "zhangsan@example.com", "1234567890", "2024-12-30");
+
+        JFrame frame = new JFrame("用户信息界面");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
+
+        MyPanel myPanel = new MyPanel(user);
+        frame.getContentPane().add(myPanel);
+
+        frame.setVisible(true);
+    }
 }
+
+
+
